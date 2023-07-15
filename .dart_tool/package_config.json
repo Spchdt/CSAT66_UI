@@ -62,10 +62,40 @@
       "languageVersion": "2.18"
     },
     {
+      "name": "flutter_map",
+      "rootUri": "file:///Users/artties/.pub-cache/hosted/pub.dev/flutter_map-5.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "flutter_map_animations",
+      "rootUri": "file:///Users/artties/.pub-cache/hosted/pub.dev/flutter_map_animations-0.4.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
       "name": "flutter_test",
       "rootUri": "file:///opt/homebrew/Caskroom/flutter/3.10.5/flutter/packages/flutter_test",
       "packageUri": "lib/",
       "languageVersion": "3.0"
+    },
+    {
+      "name": "http",
+      "rootUri": "file:///Users/artties/.pub-cache/hosted/pub.dev/http-1.1.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "http_parser",
+      "rootUri": "file:///Users/artties/.pub-cache/hosted/pub.dev/http_parser-4.0.2",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "intl",
+      "rootUri": "file:///Users/artties/.pub-cache/hosted/pub.dev/intl-0.18.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
     },
     {
       "name": "js",
@@ -74,10 +104,22 @@
       "languageVersion": "2.19"
     },
     {
+      "name": "latlong2",
+      "rootUri": "file:///Users/artties/.pub-cache/hosted/pub.dev/latlong2-0.9.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
       "name": "lints",
       "rootUri": "file:///Users/artties/.pub-cache/hosted/pub.dev/lints-2.1.1",
       "packageUri": "lib/",
       "languageVersion": "3.0"
+    },
+    {
+      "name": "lists",
+      "rootUri": "file:///Users/artties/.pub-cache/hosted/pub.dev/lists-1.0.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
     },
     {
       "name": "matcher",
@@ -98,8 +140,38 @@
       "languageVersion": "2.12"
     },
     {
+      "name": "mgrs_dart",
+      "rootUri": "file:///Users/artties/.pub-cache/hosted/pub.dev/mgrs_dart-2.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "path",
       "rootUri": "file:///Users/artties/.pub-cache/hosted/pub.dev/path-1.8.3",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "polylabel",
+      "rootUri": "file:///Users/artties/.pub-cache/hosted/pub.dev/polylabel-1.0.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.13"
+    },
+    {
+      "name": "proj4dart",
+      "rootUri": "file:///Users/artties/.pub-cache/hosted/pub.dev/proj4dart-2.1.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "responsive_sizer",
+      "rootUri": "file:///Users/artties/.pub-cache/hosted/pub.dev/responsive_sizer-3.1.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "sizer",
+      "rootUri": "file:///Users/artties/.pub-cache/hosted/pub.dev/sizer-2.0.15",
       "packageUri": "lib/",
       "languageVersion": "2.12"
     },
@@ -152,6 +224,18 @@
       "languageVersion": "2.17"
     },
     {
+      "name": "unicode",
+      "rootUri": "file:///Users/artties/.pub-cache/hosted/pub.dev/unicode-0.3.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "universal_io",
+      "rootUri": "file:///Users/artties/.pub-cache/hosted/pub.dev/universal_io-2.2.2",
+      "packageUri": "lib/",
+      "languageVersion": "2.17"
+    },
+    {
       "name": "vector_math",
       "rootUri": "file:///Users/artties/.pub-cache/hosted/pub.dev/vector_math-2.1.4",
       "packageUri": "lib/",
@@ -164,13 +248,19 @@
       "languageVersion": "2.15"
     },
     {
+      "name": "wkt_parser",
+      "rootUri": "file:///Users/artties/.pub-cache/hosted/pub.dev/wkt_parser-2.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "ground_station",
       "rootUri": "../",
       "packageUri": "lib/",
       "languageVersion": "3.0"
     }
   ],
-  "generated": "2023-07-14T04:00:58.129016Z",
+  "generated": "2023-07-14T11:02:32.614634Z",
   "generator": "pub",
   "generatorVersion": "3.0.5"
 }

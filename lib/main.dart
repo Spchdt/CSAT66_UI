@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:ground_station/board.dart';
+import 'package:responsive_sizer/responsive_sizer.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -11,10 +13,13 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return const CupertinoApp(
-      title: 'Flutter Demo',
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
-    );
+    return ResponsiveSizer(builder: (context, orientation, screenType) {
+      return const CupertinoApp(
+        debugShowCheckedModeBanner: false,
+        title: 'CubeSat Station',
+        home: MyHomePage(title: 'Flutter Demo Home Page'),
+      );
+    });
   }
 }
 
@@ -27,14 +32,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return const Board();
