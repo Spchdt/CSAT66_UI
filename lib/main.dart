@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:ground_station/board.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
@@ -14,10 +15,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ResponsiveSizer(builder: (context, orientation, screenType) {
-      return const CupertinoApp(
+      return CupertinoApp(
+        theme: CupertinoThemeData(
+            brightness: Brightness.light,
+            textTheme: CupertinoTextThemeData(
+              textStyle: GoogleFonts.spaceGrotesk(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.bold,
+                  color: CupertinoColors.white),
+            )),
         debugShowCheckedModeBanner: false,
         title: 'CubeSat Station',
-        home: MyHomePage(title: 'Flutter Demo Home Page'),
+        home: const MyHomePage(title: "Cube Sat Ground Station"),
       );
     });
   }
