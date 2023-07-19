@@ -220,7 +220,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                 50, 255, 255, 255)),
                                         color: mainTheme,
                                         borderRadius:
-                                            BorderRadius.circular(15)),
+                                            BorderRadius.circular(20)),
                                     child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
@@ -342,7 +342,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                 50, 255, 255, 255)),
                                         color: mainTheme,
                                         borderRadius:
-                                            BorderRadius.circular(15)),
+                                            BorderRadius.circular(20)),
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -513,7 +513,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                         50, 255, 255, 255)),
                                                 color: mainTheme,
                                                 borderRadius:
-                                                    BorderRadius.circular(15)),
+                                                    BorderRadius.circular(20)),
                                             height: 10.h,
                                             width: 12.w,
                                             child: Center(
@@ -547,7 +547,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                   50, 255, 255, 255)),
                                           color: mainTheme,
                                           borderRadius:
-                                              BorderRadius.circular(15)),
+                                              BorderRadius.circular(20)),
                                       child: Padding(
                                         padding: EdgeInsets.all(2.w),
                                         child: Column(
@@ -627,14 +627,14 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                           children: [
                             Container(
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15),
+                                borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                     strokeAlign: BorderSide.strokeAlignOutside,
                                     color: const Color.fromARGB(
                                         50, 255, 255, 255)),
                               ),
                               child: ClipRRect(
-                                borderRadius: BorderRadius.circular(15),
+                                borderRadius: BorderRadius.circular(20),
                                 child: SizedBox(
                                     height: screenHeight * 0.45,
                                     width: screenWidth * 0.45,
@@ -780,7 +780,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                         50, 255, 255, 255)),
                                                 color: mainTheme,
                                                 borderRadius:
-                                                    BorderRadius.circular(15)),
+                                                    BorderRadius.circular(20)),
                                             child: Padding(
                                               padding:
                                                   EdgeInsets.only(top: 4.h),
@@ -801,7 +801,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                 corners: StrokeCap.round,
                                                 child: Column(
                                                   children: [
-                                                    SizedBox(height: 6.h),
+                                                    SizedBox(height: 8.h),
                                                     Text(
                                                       '${temp ?? "--"}°C',
                                                       style: TextStyle(
@@ -830,7 +830,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                       50, 255, 255, 255)),
                                               color: mainTheme,
                                               borderRadius:
-                                                  BorderRadius.circular(15)),
+                                                  BorderRadius.circular(20)),
                                           child: Center(
                                             child: Column(
                                               mainAxisAlignment:
@@ -859,7 +859,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                   SizedBox(width: 10.w / 3),
                                   Container(
                                     decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(15),
+                                      borderRadius: BorderRadius.circular(20),
                                       border: Border.all(
                                           strokeAlign:
                                               BorderSide.strokeAlignOutside,
@@ -867,7 +867,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                               50, 255, 255, 255)),
                                     ),
                                     child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(15),
+                                      borderRadius: BorderRadius.circular(20),
                                       child: Image.asset(
                                         "assets/example1.jpg",
                                       ),
@@ -888,30 +888,3 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
         });
   }
 }
-
-// Column(
-//   children: [
-//     StreamBuilder(
-//       stream: channel.stream,
-//       builder: (context, snapshot) {
-//         return Text(snapshot.hasData
-//             ? '${snapshot.data}'
-//             : 'NO DATA');
-//       },
-//     ),
-//     CupertinoButton.filled(
-//         child: const Text("Send"),
-//         onPressed: () {
-//           channel.sink.add('Hello! dah');
-
-//           setState(() {
-//             points.add(LatLng(
-//                 points[points.length - 1].latitude + 1,
-//                 points[points.length - 1].latitude +
-//                     1));
-//             _animatedMapController.animateTo(
-//                 dest: points[points.length - 1]);
-//           });
-//         }),
-//   ],
-// ),
