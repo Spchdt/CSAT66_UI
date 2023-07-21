@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
@@ -14,7 +15,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 // ignore: avoid_web_libraries_in_flutter
-import 'dart:js' as js;
+// import 'dart:js' as js;
 
 class Board extends StatefulWidget {
   const Board({super.key});
@@ -31,15 +32,17 @@ class __ChartData {
 
 class _BoardState extends State<Board> with TickerProviderStateMixin {
   Timer? timer;
+  int count = 1;
 
+  @override
   void initState() {
     super.initState();
     timer = Timer.periodic(
-        Duration(seconds: 1), (Timer t) => channel.sink.add("DC"));
+        const Duration(seconds: 1), (Timer t) => channel.sink.add("DC"));
   }
 
   //Web socket source
-  final channel = WebSocketChannel.connect(Uri.parse('ws:192.168.0.149:7890'));
+  final channel = WebSocketChannel.connect(Uri.parse('ws://localhost:7891'));
 
   //Map Animation
   late final _animatedMapController = AnimatedMapController(
@@ -80,53 +83,57 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
 
   void update(String inputData) {
     //lat,lng,alt,accX,accY,accZ,gyroX,gyroY,gyroZ,heading,temp
-
     List<String> inputDataList = inputData.split(",");
 
-    double tempLat =
-        double.parse(double.parse(inputDataList[0]).toStringAsFixed(8));
-    double tempLng =
-        double.parse(double.parse(inputDataList[1]).toStringAsFixed(8));
-    double tempAlt =
-        double.parse(double.parse(inputDataList[2]).toStringAsFixed(3));
-    double tempAccX = double.parse(inputDataList[3]);
-    double tempAccY = double.parse(inputDataList[4]);
-    double tempAccZ = double.parse(inputDataList[5]);
-    double tempGyroX = double.parse(inputDataList[6]);
-    double tempGyroY = double.parse(inputDataList[7]);
-    double tempGyroZ = double.parse(inputDataList[8]);
-    int tempHeading = int.parse(inputDataList[9]);
-    double tempTemp = double.parse(inputDataList[10]);
+    lat = double.parse(double.parse(inputDataList[0]).toStringAsFixed(8));
+    lng = double.parse(double.parse(inputDataList[1]).toStringAsFixed(8));
+    alt = double.parse(double.parse(inputDataList[2]).toStringAsFixed(3));
+    accX = double.parse(inputDataList[3]);
+    accY = double.parse(inputDataList[4]);
+    accZ = double.parse(inputDataList[5]);
+    gyroX = double.parse(inputDataList[6]);
+    gyroY = double.parse(inputDataList[7]);
+    gyroZ = double.parse(inputDataList[8]);
+    heading = int.parse(inputDataList[9]);
+    temp = double.parse(inputDataList[10]);
 
-    // int tempBat = 0;
-    // String tempImg = "";
+    // bat = 0;
+    // img = "";
 
-    accX = tempAccX;
-    accY = tempAccY;
-    accZ = tempAccZ;
-    gyroX = tempGyroX;
-    gyroY = tempGyroY;
-    gyroZ = tempGyroZ;
-    temp = tempTemp;
-    alt = tempAlt;
-    lng = tempLng;
-    lat = tempLat;
-    heading = tempHeading;
-    // bat = tempBat;
-    // img = tempImg;
+    if (latLngPoints.length > 20) {
+      latLngPoints.removeAt(0);
+    }
+    if (accXList!.length > 20) {
+      accXList!.removeAt(0);
+    }
+    if (accYList!.length > 20) {
+      accYList!.removeAt(0);
+    }
+    if (accZList!.length > 20) {
+      accZList!.removeAt(0);
+    }
+    if (gyroXList!.length > 20) {
+      gyroXList!.removeAt(0);
+    }
+    if (gyroYList!.length > 20) {
+      gyroYList!.removeAt(0);
+    }
+    if (gyroZList!.length > 20) {
+      gyroZList!.removeAt(0);
+    }
 
-    latLngPoints.add(LatLng(tempLat, tempLng));
-    _animatedMapController.centerOnPoint(LatLng(tempLat, tempLng));
-    accXList!.add(__ChartData(accXList!.length, tempAccX));
-    accYList!.add(__ChartData(accYList!.length, tempAccY));
-    accZList!.add(__ChartData(accZList!.length, tempAccZ));
+    latLngPoints.add(LatLng(lat!, lng!));
+    _animatedMapController.centerOnPoint(LatLng(lat!, lng!));
+    accXList!.add(__ChartData(count, accX!));
+    accYList!.add(__ChartData(count, accY!));
+    accZList!.add(__ChartData(count, accZ!));
 
-    gyroXList!.add(__ChartData(gyroXList!.length, tempGyroX));
-    gyroYList!.add(__ChartData(gyroYList!.length, tempGyroY));
-    gyroZList!.add(__ChartData(gyroZList!.length, tempGyroZ));
+    gyroXList!.add(__ChartData(count, gyroX!));
+    gyroYList!.add(__ChartData(count, gyroY!));
+    gyroZList!.add(__ChartData(count, gyroZ!));
 
-    js.context
-        .callMethod("updateOrientation", [tempGyroX, tempGyroY, tempGyroZ]);
+    count += 1;
+    // js.context.callMethod("updateOrientation", [gyroX!, gyroY!, gyroZ!]);
   }
 
   double findProgressBarRatio(alt) {
@@ -146,7 +153,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
         stream: channel.stream,
         builder: (context, snapshot) {
           String? inputData = snapshot.data;
-          // print(inputData);
+          print("recieved");
           if (inputData != null) {
             // print(inputData);
             update(inputData);
@@ -342,7 +349,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                       children: [
                                         Center(
                                           child: Text(
-                                            'Accerelometer',
+                                            'Accelerometer',
                                             style: TextStyle(
                                                 color: Colors.grey,
                                                 fontSize: 12.sp),
@@ -492,6 +499,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                               height: 10.h,
                                             ),
                                             onPressed: () {
+                                              // getDir();
                                               channel.sink.add("DC");
                                             },
                                           ),
@@ -640,7 +648,8 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                       mapController:
                                           _animatedMapController.mapController,
                                       options: MapOptions(
-                                        center: LatLng(13.720958, 100.523164),
+                                        center:
+                                            const LatLng(13.720958, 100.523164),
                                         maxZoom: 18,
                                         zoom: 10,
                                         onMapReady: () {
@@ -666,9 +675,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                       color: Colors.black54,
                                                     ),
                                                     onPressed: () {
-                                                      setState(() {
-                                                        latLngPoints = [];
-                                                      });
+                                                      latLngPoints = [];
                                                     }),
                                                 const Spacer(),
                                                 Padding(
@@ -868,9 +875,8 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                     ),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(20),
-                                      child: Image.asset(
-                                        "assets/example1.jpg",
-                                      ),
+                                      child: Image.file(File(
+                                          "/Users/artties/Desktop/Frame 11.png")),
                                     ),
                                   ),
                                 ],
