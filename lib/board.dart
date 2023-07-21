@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
@@ -29,9 +30,16 @@ class __ChartData {
 }
 
 class _BoardState extends State<Board> with TickerProviderStateMixin {
+  Timer? timer;
+
+  void initState() {
+    super.initState();
+    timer = Timer.periodic(
+        Duration(seconds: 1), (Timer t) => channel.sink.add("DC"));
+  }
+
   //Web socket source
-  final channel = WebSocketChannel.connect(
-      Uri.parse('wss://socketsbay.com/wss/v2/1/demo/0'));
+  final channel = WebSocketChannel.connect(Uri.parse('ws:192.168.0.149:7890'));
 
   //Map Animation
   late final _animatedMapController = AnimatedMapController(
@@ -71,53 +79,27 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
   String? img;
 
   void update(String inputData) {
+    //lat,lng,alt,accX,accY,accZ,gyroX,gyroY,gyroZ,heading,temp
+
     List<String> inputDataList = inputData.split(",");
 
-    double tempAccX = 0;
-    double tempAccY = 0;
-    double tempAccZ = 0;
-    double tempGyroX = 0;
-    double tempGyroY = 0;
-    double tempGyroZ = 0;
-    double tempTemp = 0;
-    double tempAlt = 0;
-    double tempLng = 0;
-    double tempLat = 0;
-    int tempHeading = 0;
-    int tempBat = 0;
-    String tempImg = "";
+    double tempLat =
+        double.parse(double.parse(inputDataList[0]).toStringAsFixed(8));
+    double tempLng =
+        double.parse(double.parse(inputDataList[1]).toStringAsFixed(8));
+    double tempAlt =
+        double.parse(double.parse(inputDataList[2]).toStringAsFixed(3));
+    double tempAccX = double.parse(inputDataList[3]);
+    double tempAccY = double.parse(inputDataList[4]);
+    double tempAccZ = double.parse(inputDataList[5]);
+    double tempGyroX = double.parse(inputDataList[6]);
+    double tempGyroY = double.parse(inputDataList[7]);
+    double tempGyroZ = double.parse(inputDataList[8]);
+    int tempHeading = int.parse(inputDataList[9]);
+    double tempTemp = double.parse(inputDataList[10]);
 
-    for (String rawData in inputDataList) {
-      List<String> data = rawData.split("=");
-
-      if ("accX" == data[0].trim()) {
-        tempAccX = double.parse(data[1]);
-      } else if ("accY" == data[0].trim()) {
-        tempAccY = double.parse(data[1]);
-      } else if ("accZ" == data[0].trim()) {
-        tempAccZ = double.parse(data[1]);
-      } else if ("gyroX" == data[0].trim()) {
-        tempGyroX = double.parse(data[1]);
-      } else if ("gyroY" == data[0].trim()) {
-        tempGyroY = double.parse(data[1]);
-      } else if ("gyroZ" == data[0].trim()) {
-        tempGyroZ = double.parse(data[1]);
-      } else if ("temp" == data[0].trim()) {
-        tempTemp = double.parse(data[1]);
-      } else if ("alt" == data[0].trim()) {
-        tempAlt = double.parse(data[1]);
-      } else if ("lng" == data[0].trim()) {
-        tempLng = double.parse(data[1]);
-      } else if ("lat" == data[0].trim()) {
-        tempLat = double.parse(data[1]);
-      } else if ("heading" == data[0].trim()) {
-        tempHeading = int.parse(data[1]);
-      } else if ("bat" == data[0].trim()) {
-        tempBat = int.parse(data[1]);
-      } else if ("img" == data[0].trim()) {
-        tempImg = data[1];
-      }
-    }
+    // int tempBat = 0;
+    // String tempImg = "";
 
     accX = tempAccX;
     accY = tempAccY;
@@ -130,8 +112,8 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
     lng = tempLng;
     lat = tempLat;
     heading = tempHeading;
-    bat = tempBat;
-    img = tempImg;
+    // bat = tempBat;
+    // img = tempImg;
 
     latLngPoints.add(LatLng(tempLat, tempLng));
     _animatedMapController.centerOnPoint(LatLng(tempLat, tempLng));
@@ -143,7 +125,16 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
     gyroYList!.add(__ChartData(gyroYList!.length, tempGyroY));
     gyroZList!.add(__ChartData(gyroZList!.length, tempGyroZ));
 
-    js.context.callMethod("updateOrientation", [gyroX, gyroY, gyroZ]);
+    js.context
+        .callMethod("updateOrientation", [tempGyroX, tempGyroY, tempGyroZ]);
+  }
+
+  double findProgressBarRatio(alt) {
+    if (alt < 0) {
+      return 0;
+    } else {
+      return alt! / 30000;
+    }
   }
 
   @override
@@ -155,10 +146,10 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
         stream: channel.stream,
         builder: (context, snapshot) {
           String? inputData = snapshot.data;
+          // print(inputData);
           if (inputData != null) {
-            if (inputData[0] == "a") {
-              update(inputData);
-            }
+            // print(inputData);
+            update(inputData);
           }
 
           return CupertinoPageScaffold(
@@ -474,19 +465,18 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                           child: ClipOval(
                                             child: Container(
                                               color: mainTheme,
-                                              child: Padding(
-                                                padding: EdgeInsets.all(1.w),
-                                                child: ModelViewer(
-                                                    id: "transform",
-                                                    cameraControls: false,
-                                                    orientation:
-                                                        "$gyroX $gyroY $gyroZ",
-                                                    backgroundColor:
-                                                        Colors.transparent,
-                                                    src: 'assets/CubeSat.glb',
-                                                    alt:
-                                                        'A 3D model of an Cube Sat',
-                                                    disableZoom: true),
+                                              child: ModelViewer(
+                                                disablePan: true,
+                                                id: "transform",
+                                                cameraControls: false,
+                                                orientation:
+                                                    "$gyroX $gyroY $gyroZ",
+                                                backgroundColor:
+                                                    Colors.transparent,
+                                                src:
+                                                    'assets/assets/CubeSat.glb',
+                                                alt:
+                                                    'A 3D model of an Cube Sat',
                                               ),
                                             ),
                                           ),
@@ -496,9 +486,14 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                       const Spacer(),
                                       Row(
                                         children: [
-                                          Image.asset(
-                                            "assets/BccLogo.png",
-                                            height: 10.h,
+                                          CupertinoButton(
+                                            child: Image.asset(
+                                              "assets/BccLogo.png",
+                                              height: 10.h,
+                                            ),
+                                            onPressed: () {
+                                              channel.sink.add("DC");
+                                            },
                                           ),
                                           SizedBox(width: 1.5.w),
                                           Image.asset(
@@ -567,9 +562,9 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                         MainAxisAlignment
                                                             .spaceBetween,
                                                     children: [
-                                                      Text("100 - "),
-                                                      Text("50 - "),
-                                                      Text("0 - "),
+                                                      Text("30 km. - "),
+                                                      Text("15 km. - "),
+                                                      Text("0 km. - "),
                                                     ],
                                                   ),
                                                 ),
@@ -583,7 +578,10 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                   foregrondColor:
                                                       const Color.fromARGB(
                                                           255, 36, 159, 216),
-                                                  ratio: 0.5,
+                                                  ratio: alt != null
+                                                      ? findProgressBarRatio(
+                                                          alt)
+                                                      : 0,
                                                   direction: Axis.vertical,
                                                   curve: Curves
                                                       .fastLinearToSlowEaseIn,
@@ -595,7 +593,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                             Column(
                                               children: [
                                                 Text(
-                                                  '${alt ?? "--"} ft.',
+                                                  '${alt ?? "--"} m.',
                                                   style: TextStyle(
                                                       fontWeight:
                                                           FontWeight.w700,
@@ -642,6 +640,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                       mapController:
                                           _animatedMapController.mapController,
                                       options: MapOptions(
+                                        center: LatLng(13.720958, 100.523164),
                                         maxZoom: 18,
                                         zoom: 10,
                                         onMapReady: () {
@@ -787,7 +786,8 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                               child: DashedCircularProgressBar
                                                   .aspectRatio(
                                                 aspectRatio: 1,
-                                                progress: 37,
+                                                progress:
+                                                    temp != null ? temp! : 0,
                                                 startAngle: 300,
                                                 sweepAngle: 120,
                                                 foregroundColor:
