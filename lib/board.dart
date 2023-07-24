@@ -1015,15 +1015,17 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                 return Stack(
                                                   children: [
                                                     ClipRRect(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              20),
-                                                      child: Container(
-                                                        color: mainTheme,
-                                                        child: Image.file(File(
-                                                            "assets/empty.png")),
-                                                      ),
-                                                    ),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(20),
+                                                        child: AspectRatio(
+                                                          aspectRatio:
+                                                              640 / 512,
+                                                          child: Container(
+                                                              color: mainTheme,
+                                                              width: 640.sp,
+                                                              height: 512.sp),
+                                                        )),
                                                     if (images.isNotEmpty)
                                                       ClipRRect(
                                                           borderRadius:
