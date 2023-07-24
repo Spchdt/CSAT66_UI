@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:simple_animation_progress_bar/simple_animation_progress_bar.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:watcher/watcher.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -34,6 +35,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
   final modelController = DiTreDiController();
   late Future<List<Face3D>> cubeSatModel;
   Timer? timer;
+  var watcher = DirectoryWatcher("/Users/artties/Documents/CubeSat/");
   int count = 1;
   List<String> images = [];
   int imagesIndex = 0;
@@ -44,6 +46,11 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
     cubeSatModel = ObjParser().loadFromResources("assets/CubeSat.obj");
     timer = Timer.periodic(
         const Duration(seconds: 1), (Timer t) => channel.sink.add("DC"));
+
+    watcher.events.listen((event) {
+      print(event);
+      getImages();
+    });
   }
 
   //Web socket source
@@ -146,14 +153,13 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
     final dir = await getApplicationDocumentsDirectory();
 
     String imgDir = ("${dir.path}/CubeSat");
+    images = [];
+
     Directory(imgDir).listSync().forEach((e) {
-      if (p.extension(e.path) == ".png") {
-        print(e.path);
+      if (p.extension(e.path) == ".jpg") {
         images.add(e.path);
+        images.sort((a, b) => a.compareTo(b));
         imagesIndex = images.length - 1;
-        // setState(() {
-        //   img = e.path;
-        // });
         setState(() {});
       }
     });
@@ -518,17 +524,12 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                       // SizedBox(height: 10.w / 3),
                                       const Spacer(),
                                       Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
                                         children: [
-                                          CupertinoButton(
-                                            child: Image.asset(
-                                              "assets/BccLogo.png",
-                                              height: screenHeight * 0.1,
-                                            ),
-                                            onPressed: () async {
-                                              // channel.sink.add("DC");
-
-                                              getImages();
-                                            },
+                                          Image.asset(
+                                            "assets/BccLogo.png",
+                                            height: screenHeight * 0.1,
                                           ),
                                           SizedBox(width: 1.5.w),
                                           Image.asset(
@@ -701,7 +702,9 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                       color: Colors.black54,
                                                     ),
                                                     onPressed: () {
-                                                      latLngPoints = [];
+                                                      setState(() {
+                                                        latLngPoints = [];
+                                                      });
                                                     }),
                                                 const Spacer(),
                                                 Padding(
@@ -787,7 +790,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                               height: 50,
                                               builder: (context) {
                                                 return Image.asset(
-                                                    "assets/satellite.png");
+                                                    "assets/sat2.png");
                                               },
                                             ),
                                           ],
@@ -928,14 +931,15 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                           SizedBox(width: screenHeight * 0.01),
                                           CupertinoButton(
                                             padding: EdgeInsets.zero,
-                                            onPressed:
-                                                imagesIndex == images.length - 1
-                                                    ? null
-                                                    : () {
-                                                        setState(() {
-                                                          imagesIndex += 1;
-                                                        });
-                                                      },
+                                            onPressed: imagesIndex ==
+                                                        images.length - 1 ||
+                                                    images.isEmpty
+                                                ? null
+                                                : () {
+                                                    setState(() {
+                                                      imagesIndex += 1;
+                                                    });
+                                                  },
                                             child: Container(
                                               decoration: BoxDecoration(
                                                 color: mainTheme,
@@ -951,6 +955,32 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                 Icons.chevron_right_rounded,
                                                 color: Colors.white,
                                                 size: 17.sp,
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(width: screenHeight * 0.02),
+                                          CupertinoButton(
+                                            padding: EdgeInsets.zero,
+                                            onPressed: () {
+                                              getImages();
+                                            },
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                color: mainTheme,
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                border: Border.all(
+                                                    color: const Color.fromARGB(
+                                                        50, 255, 255, 255)),
+                                              ),
+                                              height: screenHeight * 0.05,
+                                              width: screenWidth * 0.07,
+                                              child: Center(
+                                                child: Text(
+                                                  "${images.isEmpty ? imagesIndex : imagesIndex + 1} OF ${images.length}",
+                                                  style: const TextStyle(
+                                                      color: Colors.white),
+                                                ),
                                               ),
                                             ),
                                           ),
@@ -996,13 +1026,14 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                     ),
                                                     if (images.isNotEmpty)
                                                       ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(20),
-                                                        child: Image.file(File(
-                                                            images[
-                                                                imagesIndex])),
-                                                      ),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(20),
+                                                          child: Image.file(
+                                                            File(images[
+                                                                imagesIndex]),
+                                                            scale: 1 / 2,
+                                                          )),
                                                   ],
                                                 );
                                               },

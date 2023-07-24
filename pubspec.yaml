@@ -47,6 +47,7 @@ dependencies:
   path: ^1.8.3
   ditredi: ^2.0.0
   responsive_sizer: ^3.2.0
+  watcher: ^1.1.0
 
 dev_dependencies:
   flutter_test:
