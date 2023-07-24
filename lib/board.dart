@@ -3,19 +3,19 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
+import 'package:ditredi/ditredi.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_glow/flutter_glow.dart';
 import 'package:flutter_map_animations/flutter_map_animations.dart';
-import 'package:model_viewer_plus/model_viewer_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:simple_animation_progress_bar/simple_animation_progress_bar.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-// ignore: avoid_web_libraries_in_flutter
-// import 'dart:js' as js;
+import 'package:path/path.dart' as p;
 
 class Board extends StatefulWidget {
   const Board({super.key});
@@ -31,12 +31,17 @@ class __ChartData {
 }
 
 class _BoardState extends State<Board> with TickerProviderStateMixin {
+  final modelController = DiTreDiController();
+  late Future<List<Face3D>> cubeSatModel;
   Timer? timer;
   int count = 1;
+  List<String> images = [];
+  int imagesIndex = 0;
 
   @override
   void initState() {
     super.initState();
+    cubeSatModel = ObjParser().loadFromResources("assets/CubeSat.obj");
     timer = Timer.periodic(
         const Duration(seconds: 1), (Timer t) => channel.sink.add("DC"));
   }
@@ -100,9 +105,9 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
     // bat = 0;
     // img = "";
 
-    if (latLngPoints.length > 20) {
-      latLngPoints.removeAt(0);
-    }
+    // if (latLngPoints.length > 20) {
+    //   latLngPoints.removeAt(0);
+    // }
     if (accXList!.length > 20) {
       accXList!.removeAt(0);
     }
@@ -133,7 +138,25 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
     gyroZList!.add(__ChartData(count, gyroZ!));
 
     count += 1;
-    // js.context.callMethod("updateOrientation", [gyroX!, gyroY!, gyroZ!]);
+    modelController.update(
+        rotationX: gyroX, rotationY: gyroY, rotationZ: gyroZ);
+  }
+
+  void getImages() async {
+    final dir = await getApplicationDocumentsDirectory();
+
+    String imgDir = ("${dir.path}/CubeSat");
+    Directory(imgDir).listSync().forEach((e) {
+      if (p.extension(e.path) == ".png") {
+        print(e.path);
+        images.add(e.path);
+        imagesIndex = images.length - 1;
+        // setState(() {
+        //   img = e.path;
+        // });
+        setState(() {});
+      }
+    });
   }
 
   double findProgressBarRatio(alt) {
@@ -211,7 +234,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                 Expanded(
                                   child: Container(
                                     padding: EdgeInsets.all(1.w),
-                                    height: 35.h,
+                                    height: screenHeight * 0.35,
                                     decoration: BoxDecoration(
                                         border: Border.all(
                                             color: const Color.fromARGB(
@@ -333,7 +356,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                 Expanded(
                                   child: Container(
                                     padding: EdgeInsets.all(1.w),
-                                    height: 35.h,
+                                    height: screenHeight * 0.35,
                                     decoration: BoxDecoration(
                                         border: Border.all(
                                             color: const Color.fromARGB(
@@ -464,28 +487,31 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
                                             border: Border.all(
-                                                strokeAlign: BorderSide
-                                                    .strokeAlignOutside,
                                                 color: const Color.fromARGB(
-                                                    70, 255, 255, 255)),
+                                                    80, 255, 255, 255)),
                                           ),
                                           child: ClipOval(
                                             child: Container(
-                                              color: mainTheme,
-                                              child: ModelViewer(
-                                                disablePan: true,
-                                                id: "transform",
-                                                cameraControls: false,
-                                                orientation:
-                                                    "$gyroX $gyroY $gyroZ",
-                                                backgroundColor:
-                                                    Colors.transparent,
-                                                src:
-                                                    'assets/assets/CubeSat.glb',
-                                                alt:
-                                                    'A 3D model of an Cube Sat',
-                                              ),
-                                            ),
+                                                color: mainTheme,
+                                                child: FutureBuilder(
+                                                  future: cubeSatModel,
+                                                  builder: (context, snapshot) {
+                                                    if (snapshot
+                                                            .connectionState ==
+                                                        ConnectionState.done) {
+                                                      return DiTreDi(
+                                                        controller:
+                                                            modelController,
+                                                        figures: [
+                                                          Mesh3D(
+                                                              snapshot.data!),
+                                                        ],
+                                                      );
+                                                    } else {
+                                                      return Container();
+                                                    }
+                                                  },
+                                                )),
                                           ),
                                         ),
                                       ),
@@ -496,17 +522,18 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                           CupertinoButton(
                                             child: Image.asset(
                                               "assets/BccLogo.png",
-                                              height: 10.h,
+                                              height: screenHeight * 0.1,
                                             ),
-                                            onPressed: () {
-                                              // getDir();
-                                              channel.sink.add("DC");
+                                            onPressed: () async {
+                                              // channel.sink.add("DC");
+
+                                              getImages();
                                             },
                                           ),
                                           SizedBox(width: 1.5.w),
                                           Image.asset(
                                             "assets/SpaceLogo.png",
-                                            height: 10.h,
+                                            height: screenHeight * 0.1,
                                           ),
                                           SizedBox(width: 3.5.w),
                                           Container(
@@ -517,7 +544,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                 color: mainTheme,
                                                 borderRadius:
                                                     BorderRadius.circular(20)),
-                                            height: 10.h,
+                                            height: screenHeight * 0.1,
                                             width: 12.w,
                                             child: Center(
                                                 child: Row(
@@ -562,7 +589,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                   MainAxisAlignment.center,
                                               children: [
                                                 SizedBox(
-                                                  height: 30.h,
+                                                  height: screenHeight * 0.3,
                                                   child: const Column(
                                                     crossAxisAlignment:
                                                         CrossAxisAlignment.end,
@@ -580,7 +607,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                   borderRadius:
                                                       BorderRadius.circular(
                                                           100),
-                                                  height: 30.h,
+                                                  height: screenHeight * 0.3,
                                                   width: 20,
                                                   backgroundColor: Colors.white,
                                                   foregrondColor:
@@ -635,7 +662,6 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                    strokeAlign: BorderSide.strokeAlignOutside,
                                     color: const Color.fromARGB(
                                         50, 255, 255, 255)),
                               ),
@@ -788,8 +814,8 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                 borderRadius:
                                                     BorderRadius.circular(20)),
                                             child: Padding(
-                                              padding:
-                                                  EdgeInsets.only(top: 4.h),
+                                              padding: EdgeInsets.only(
+                                                  top: screenHeight * 0.04),
                                               child: DashedCircularProgressBar
                                                   .aspectRatio(
                                                 aspectRatio: 1,
@@ -808,7 +834,9 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                 corners: StrokeCap.round,
                                                 child: Column(
                                                   children: [
-                                                    SizedBox(height: 8.h),
+                                                    SizedBox(
+                                                        height: screenHeight *
+                                                            0.08),
                                                     Text(
                                                       '${temp ?? "--"}°C',
                                                       style: TextStyle(
@@ -830,7 +858,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                         ),
                                         SizedBox(height: 10.w / 3),
                                         Container(
-                                          height: 12.h,
+                                          height: screenHeight * 0.12,
                                           decoration: BoxDecoration(
                                               border: Border.all(
                                                   color: const Color.fromARGB(
@@ -864,20 +892,125 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                     ),
                                   ),
                                   SizedBox(width: 10.w / 3),
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
-                                          strokeAlign:
-                                              BorderSide.strokeAlignOutside,
-                                          color: const Color.fromARGB(
-                                              50, 255, 255, 255)),
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(20),
-                                      child: Image.file(File(
-                                          "/Users/artties/Desktop/Frame 11.png")),
-                                    ),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          CupertinoButton(
+                                            padding: EdgeInsets.zero,
+                                            onPressed: imagesIndex == 0
+                                                ? null
+                                                : () {
+                                                    setState(() {
+                                                      imagesIndex -= 1;
+                                                    });
+                                                  },
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                color: mainTheme,
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                border: Border.all(
+                                                    color: const Color.fromARGB(
+                                                        50, 255, 255, 255)),
+                                              ),
+                                              height: screenHeight * 0.05,
+                                              width: screenHeight * 0.05,
+                                              child: Icon(
+                                                Icons.chevron_left_rounded,
+                                                color: Colors.white,
+                                                size: 17.sp,
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(width: screenHeight * 0.01),
+                                          CupertinoButton(
+                                            padding: EdgeInsets.zero,
+                                            onPressed:
+                                                imagesIndex == images.length - 1
+                                                    ? null
+                                                    : () {
+                                                        setState(() {
+                                                          imagesIndex += 1;
+                                                        });
+                                                      },
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                color: mainTheme,
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                border: Border.all(
+                                                    color: const Color.fromARGB(
+                                                        50, 255, 255, 255)),
+                                              ),
+                                              height: screenHeight * 0.05,
+                                              width: screenHeight * 0.05,
+                                              child: Icon(
+                                                Icons.chevron_right_rounded,
+                                                color: Colors.white,
+                                                size: 17.sp,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(height: screenHeight * 0.01),
+                                      Expanded(
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                            border: Border.all(
+                                                color: const Color.fromARGB(
+                                                    50, 255, 255, 255)),
+                                          ),
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                            child: CupertinoContextMenu.builder(
+                                              actions: [
+                                                CupertinoContextMenuAction(
+                                                  onPressed: () {
+                                                    Navigator.pop(context);
+                                                  },
+                                                  isDefaultAction: true,
+                                                  trailingIcon: CupertinoIcons
+                                                      .xmark_circle_fill,
+                                                  child: const Text('Dismiss'),
+                                                ),
+                                              ],
+                                              builder: (context, animation) {
+                                                return Stack(
+                                                  children: [
+                                                    ClipRRect(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20),
+                                                      child: Container(
+                                                        color: mainTheme,
+                                                        child: Image.file(File(
+                                                            "assets/empty.png")),
+                                                      ),
+                                                    ),
+                                                    if (images.isNotEmpty)
+                                                      ClipRRect(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(20),
+                                                        child: Image.file(File(
+                                                            images[
+                                                                imagesIndex])),
+                                                      ),
+                                                  ],
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
