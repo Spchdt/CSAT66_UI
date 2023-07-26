@@ -8,7 +8,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_glow/flutter_glow.dart';
 import 'package:flutter_map_animations/flutter_map_animations.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:simple_animation_progress_bar/simple_animation_progress_bar.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
@@ -17,9 +16,14 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:path/path.dart' as p;
+import 'package:camera/camera.dart';
+
+import 'camera.dart';
 
 class Board extends StatefulWidget {
-  const Board({super.key});
+  const Board({super.key, required this.channel, required this.port});
+  final WebSocketChannel channel;
+  final String port;
 
   @override
   State<Board> createState() => _BoardState();
@@ -35,26 +39,46 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
   final modelController = DiTreDiController();
   late Future<List<Face3D>> cubeSatModel;
   Timer? timer;
-  var watcher = DirectoryWatcher("/Users/artties/Documents/CubeSat/");
+  var watcher = DirectoryWatcher("C:/RX-SSTV/History");
   int count = 1;
   List<String> images = [];
   int imagesIndex = 0;
+  late CameraController controller;
 
   @override
   void initState() {
     super.initState();
     cubeSatModel = ObjParser().loadFromResources("assets/CubeSat.obj");
+    getImages();
+    controller =
+        CameraController(CameraDevice.cameras[0], ResolutionPreset.max);
+    controller.initialize().then((_) {
+      print(CameraDevice.cameras);
+      if (!mounted) {
+        return;
+      }
+      setState(() {});
+    }).catchError((Object e) {
+      if (e is CameraException) {
+        switch (e.code) {
+          case 'CameraAccessDenied':
+            // Handle access errors here.
+            break;
+          default:
+            // Handle other errors here.
+            break;
+        }
+      }
+    });
+
     timer = Timer.periodic(
-        const Duration(seconds: 1), (Timer t) => channel.sink.add("DC"));
+        const Duration(seconds: 1), (Timer t) => widget.channel.sink.add("DC"));
 
     watcher.events.listen((event) {
       print(event);
       getImages();
     });
   }
-
-  //Web socket source
-  final channel = WebSocketChannel.connect(Uri.parse('ws://localhost:7891'));
 
   //Map Animation
   late final _animatedMapController = AnimatedMapController(
@@ -150,12 +174,11 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
   }
 
   void getImages() async {
-    final dir = await getApplicationDocumentsDirectory();
-
-    String imgDir = ("${dir.path}/CubeSat");
+    // final dir = await getApplicationDocumentsDirectory();
+    // String imgDir = ("${dir.path}/CubeSat");
     images = [];
 
-    Directory(imgDir).listSync().forEach((e) {
+    Directory("C:/RX-SSTV/History").listSync().forEach((e) {
       if (p.extension(e.path) == ".jpg") {
         images.add(e.path);
         images.sort((a, b) => a.compareTo(b));
@@ -179,7 +202,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
     double screenHeight = MediaQuery.sizeOf(context).height;
 
     return StreamBuilder(
-        stream: channel.stream,
+        stream: widget.channel.stream,
         builder: (context, snapshot) {
           String? inputData = snapshot.data;
           print("recieved");
@@ -527,9 +550,43 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.end,
                                         children: [
-                                          Image.asset(
-                                            "assets/BccLogo.png",
-                                            height: screenHeight * 0.1,
+                                          CupertinoButton(
+                                            padding: EdgeInsets.zero,
+                                            onPressed: () {
+                                              showCupertinoModalPopup<void>(
+                                                context: context,
+                                                builder:
+                                                    (BuildContext context) =>
+                                                        CupertinoActionSheet(
+                                                  actions: <CupertinoActionSheetAction>[
+                                                    CupertinoActionSheetAction(
+                                                      isDefaultAction: true,
+                                                      onPressed: () {},
+                                                      child: Text(
+                                                          "PORT: ${widget.port}",
+                                                          style:
+                                                              const TextStyle(
+                                                                  color: Colors
+                                                                      .black)),
+                                                    ),
+                                                    CupertinoActionSheetAction(
+                                                      isDefaultAction: true,
+                                                      onPressed: () {},
+                                                      child: Text(
+                                                          "${CameraDevice.cameras}",
+                                                          style:
+                                                              const TextStyle(
+                                                                  color: Colors
+                                                                      .black)),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                            child: Image.asset(
+                                              "assets/BccLogo.png",
+                                              height: screenHeight * 0.1,
+                                            ),
                                           ),
                                           SizedBox(width: 1.5.w),
                                           Image.asset(
@@ -736,8 +793,10 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                             color: const Color
                                                                     .fromARGB(
                                                                 180, 4, 3, 17)),
-                                                        width: 250,
-                                                        height: 80,
+                                                        width:
+                                                            screenWidth * 0.2,
+                                                        height:
+                                                            screenHeight * 0.1,
                                                         child: Column(
                                                             crossAxisAlignment:
                                                                 CrossAxisAlignment
@@ -786,11 +845,11 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                   ? const LatLng(0, 0)
                                                   : latLngPoints[
                                                       latLngPoints.length - 1],
-                                              width: 50,
-                                              height: 50,
+                                              width: 40,
+                                              height: 40,
                                               builder: (context) {
                                                 return Image.asset(
-                                                    "assets/sat2.png");
+                                                    "assets/CubeSat_icon.png");
                                               },
                                             ),
                                           ],
@@ -974,7 +1033,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                         50, 255, 255, 255)),
                                               ),
                                               height: screenHeight * 0.05,
-                                              width: screenWidth * 0.07,
+                                              width: screenWidth * 0.1,
                                               child: Center(
                                                 child: Text(
                                                   "${images.isEmpty ? imagesIndex : imagesIndex + 1} OF ${images.length}",
@@ -1027,15 +1086,45 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                               height: 512.sp),
                                                         )),
                                                     if (images.isNotEmpty)
-                                                      ClipRRect(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(20),
-                                                          child: Image.file(
-                                                            File(images[
-                                                                imagesIndex]),
-                                                            scale: 1 / 2,
-                                                          )),
+                                                      CupertinoButton(
+                                                        padding:
+                                                            EdgeInsets.zero,
+                                                        onPressed: () {
+                                                          showCupertinoModalPopup<
+                                                              void>(
+                                                            context: context,
+                                                            builder: (BuildContext
+                                                                    context) =>
+                                                                CupertinoActionSheet(
+                                                              actions: <CupertinoActionSheetAction>[
+                                                                CupertinoActionSheetAction(
+                                                                  isDefaultAction:
+                                                                      true,
+                                                                  onPressed:
+                                                                      () {},
+                                                                  child: Image
+                                                                      .file(
+                                                                    File(images[
+                                                                        imagesIndex]),
+                                                                    scale:
+                                                                        1 / 2,
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          );
+                                                        },
+                                                        child: ClipRRect(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        20),
+                                                            child: Image.file(
+                                                              File(images[
+                                                                  imagesIndex]),
+                                                              scale: 1 / 2,
+                                                            )),
+                                                      ),
                                                   ],
                                                 );
                                               },
