@@ -44,6 +44,9 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
   List<String> images = [];
   int imagesIndex = 0;
   late CameraController controller;
+  String? error;
+  bool toggleCamera = false;
+  String runTime = "00:00";
 
   @override
   void initState() {
@@ -53,7 +56,6 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
     controller =
         CameraController(CameraDevice.cameras[0], ResolutionPreset.max);
     controller.initialize().then((_) {
-      print(CameraDevice.cameras);
       if (!mounted) {
         return;
       }
@@ -62,10 +64,10 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
       if (e is CameraException) {
         switch (e.code) {
           case 'CameraAccessDenied':
-            // Handle access errors here.
+            error = e.description;
             break;
           default:
-            // Handle other errors here.
+            error = e.description;
             break;
         }
       }
@@ -78,6 +80,12 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
       print(event);
       getImages();
     });
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
   }
 
   //Map Animation
@@ -169,8 +177,17 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
     gyroZList!.add(__ChartData(count, gyroZ!));
 
     count += 1;
+    getTime(count);
     modelController.update(
         rotationX: gyroX, rotationY: gyroY, rotationZ: gyroZ);
+  }
+
+  void getTime(time) {
+    int sec = time % 60;
+    int min = (time / 60).floor();
+    String minute = min.toString().length <= 1 ? "0$min" : "$min";
+    String second = sec.toString().length <= 1 ? "0$sec" : "$sec";
+    runTime = "$minute:$second";
   }
 
   void getImages() async {
@@ -196,6 +213,14 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
     }
   }
 
+  double findTempProgress(temp) {
+    if (temp > 0) {
+      return temp;
+    } else {
+      return 0;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.sizeOf(context).width;
@@ -207,7 +232,6 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
           String? inputData = snapshot.data;
           print("recieved");
           if (inputData != null) {
-            // print(inputData);
             update(inputData);
           }
 
@@ -506,46 +530,92 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                             SizedBox(height: 10.w / 3),
                             Expanded(
                               child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Column(
+                                    crossAxisAlignment: toggleCamera
+                                        ? CrossAxisAlignment.start
+                                        : CrossAxisAlignment.center,
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      SizedBox.square(
-                                        dimension: screenHeight * 0.35,
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                                color: const Color.fromARGB(
-                                                    80, 255, 255, 255)),
-                                          ),
-                                          child: ClipOval(
-                                            child: Container(
-                                                color: mainTheme,
-                                                child: FutureBuilder(
-                                                  future: cubeSatModel,
-                                                  builder: (context, snapshot) {
-                                                    if (snapshot
-                                                            .connectionState ==
-                                                        ConnectionState.done) {
-                                                      return DiTreDi(
-                                                        controller:
-                                                            modelController,
-                                                        figures: [
-                                                          Mesh3D(
-                                                              snapshot.data!),
-                                                        ],
+                                      if (toggleCamera)
+                                        Expanded(
+                                          child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                              child: AspectRatio(
+                                                aspectRatio: 640 / 512,
+                                                child: CupertinoButton(
+                                                    padding: EdgeInsets.zero,
+                                                    onPressed: () {
+                                                      showCupertinoModalPopup<
+                                                          void>(
+                                                        context: context,
+                                                        builder: (BuildContext
+                                                                context) =>
+                                                            CupertinoActionSheet(
+                                                          actions: <CupertinoActionSheetAction>[
+                                                            CupertinoActionSheetAction(
+                                                                isDefaultAction:
+                                                                    true,
+                                                                onPressed:
+                                                                    () {},
+                                                                child: CameraPreview(
+                                                                    controller)),
+                                                          ],
+                                                        ),
                                                       );
-                                                    } else {
-                                                      return Container();
-                                                    }
-                                                  },
-                                                )),
+                                                    },
+                                                    child: ClipRRect(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20),
+                                                      child: CameraPreview(
+                                                          controller),
+                                                    )),
+                                              )),
+                                        )
+                                      else
+                                        SizedBox.square(
+                                          dimension: screenHeight * 0.35,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                  color: const Color.fromARGB(
+                                                      80, 255, 255, 255)),
+                                            ),
+                                            child: ClipOval(
+                                              child: Container(
+                                                  color: mainTheme,
+                                                  child: FutureBuilder(
+                                                    future: cubeSatModel,
+                                                    builder:
+                                                        (context, snapshot) {
+                                                      if (snapshot
+                                                              .connectionState ==
+                                                          ConnectionState
+                                                              .done) {
+                                                        return DiTreDi(
+                                                          controller:
+                                                              modelController,
+                                                          figures: [
+                                                            Mesh3D(
+                                                                snapshot.data!),
+                                                          ],
+                                                        );
+                                                      } else {
+                                                        return Container();
+                                                      }
+                                                    },
+                                                  )),
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      // SizedBox(height: 10.w / 3),
-                                      const Spacer(),
+                                      if (toggleCamera)
+                                        SizedBox(height: 10.w / 3)
+                                      else
+                                        const Spacer(),
                                       Row(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.end,
@@ -579,6 +649,25 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                                                   color: Colors
                                                                       .black)),
                                                     ),
+                                                    CupertinoActionSheetAction(
+                                                      isDefaultAction: true,
+                                                      onPressed: () {},
+                                                      child: Text("$error",
+                                                          style:
+                                                              const TextStyle(
+                                                                  color: Colors
+                                                                      .black)),
+                                                    ),
+                                                    CupertinoActionSheetAction(
+                                                      isDefaultAction: true,
+                                                      onPressed: () {},
+                                                      child: Text(
+                                                          "Runtime: $runTime",
+                                                          style:
+                                                              const TextStyle(
+                                                                  color: Colors
+                                                                      .black)),
+                                                    ),
                                                   ],
                                                 ),
                                               );
@@ -589,38 +678,60 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                             ),
                                           ),
                                           SizedBox(width: 1.5.w),
-                                          Image.asset(
-                                            "assets/SpaceLogo.png",
-                                            height: screenHeight * 0.1,
+                                          CupertinoButton(
+                                            padding: EdgeInsets.zero,
+                                            onPressed: () {
+                                              setState(() {
+                                                if (toggleCamera == true) {
+                                                  toggleCamera = false;
+                                                } else {
+                                                  toggleCamera = true;
+                                                }
+                                              });
+                                            },
+                                            child: Image.asset(
+                                              "assets/SpaceLogo.png",
+                                              height: screenHeight * 0.1,
+                                            ),
                                           ),
                                           SizedBox(width: 3.5.w),
-                                          Container(
-                                            decoration: BoxDecoration(
-                                                border: Border.all(
-                                                    color: const Color.fromARGB(
-                                                        50, 255, 255, 255)),
-                                                color: mainTheme,
-                                                borderRadius:
-                                                    BorderRadius.circular(20)),
-                                            height: screenHeight * 0.1,
-                                            width: 12.w,
-                                            child: Center(
-                                                child: Row(
-                                              children: [
-                                                const Spacer(),
-                                                Icon(
-                                                  Icons.battery_full_rounded,
-                                                  size: 17.sp,
-                                                  color: Colors.white,
-                                                ),
-                                                Text(
-                                                  "${bat ?? "--"}%",
-                                                  style: TextStyle(
-                                                      fontSize: 17.sp),
-                                                ),
-                                                const Spacer(),
-                                              ],
-                                            )),
+                                          CupertinoButton(
+                                            padding: EdgeInsets.zero,
+                                            onPressed: () {},
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                      color:
+                                                          const Color.fromARGB(
+                                                              50,
+                                                              255,
+                                                              255,
+                                                              255)),
+                                                  color: mainTheme,
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          20)),
+                                              height: screenHeight * 0.1,
+                                              width: 12.w,
+                                              child: Center(
+                                                  child: Row(
+                                                children: [
+                                                  const Spacer(),
+                                                  Icon(
+                                                    Icons.timer_outlined,
+                                                    size: 17.sp,
+                                                    color: Colors.white,
+                                                  ),
+                                                  Text(
+                                                    runTime,
+                                                    style: TextStyle(
+                                                        fontSize: 15.sp,
+                                                        color: Colors.white),
+                                                  ),
+                                                  const Spacer(),
+                                                ],
+                                              )),
+                                            ),
                                           )
                                         ],
                                       )
@@ -881,8 +992,9 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                               child: DashedCircularProgressBar
                                                   .aspectRatio(
                                                 aspectRatio: 1,
-                                                progress:
-                                                    temp != null ? temp! : 0,
+                                                progress: temp != null
+                                                    ? findTempProgress(temp!)
+                                                    : 0,
                                                 startAngle: 300,
                                                 sweepAngle: 120,
                                                 foregroundColor:
@@ -1058,76 +1170,55 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                           child: ClipRRect(
                                             borderRadius:
                                                 BorderRadius.circular(20),
-                                            child: CupertinoContextMenu.builder(
-                                              actions: [
-                                                CupertinoContextMenuAction(
-                                                  onPressed: () {
-                                                    Navigator.pop(context);
-                                                  },
-                                                  isDefaultAction: true,
-                                                  trailingIcon: CupertinoIcons
-                                                      .xmark_circle_fill,
-                                                  child: const Text('Dismiss'),
-                                                ),
-                                              ],
-                                              builder: (context, animation) {
-                                                return Stack(
-                                                  children: [
-                                                    ClipRRect(
+                                            child: Stack(
+                                              children: [
+                                                ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            20),
+                                                    child: AspectRatio(
+                                                      aspectRatio: 640 / 512,
+                                                      child: Container(
+                                                          color: mainTheme,
+                                                          width: 640.sp,
+                                                          height: 512.sp),
+                                                    )),
+                                                if (images.isNotEmpty)
+                                                  CupertinoButton(
+                                                    padding: EdgeInsets.zero,
+                                                    onPressed: () {
+                                                      showCupertinoModalPopup<
+                                                          void>(
+                                                        context: context,
+                                                        builder: (BuildContext
+                                                                context) =>
+                                                            CupertinoActionSheet(
+                                                          actions: <CupertinoActionSheetAction>[
+                                                            CupertinoActionSheetAction(
+                                                              isDefaultAction:
+                                                                  true,
+                                                              onPressed: () {},
+                                                              child: Image.file(
+                                                                File(images[
+                                                                    imagesIndex]),
+                                                                scale: 1 / 2,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      );
+                                                    },
+                                                    child: ClipRRect(
                                                         borderRadius:
                                                             BorderRadius
                                                                 .circular(20),
-                                                        child: AspectRatio(
-                                                          aspectRatio:
-                                                              640 / 512,
-                                                          child: Container(
-                                                              color: mainTheme,
-                                                              width: 640.sp,
-                                                              height: 512.sp),
+                                                        child: Image.file(
+                                                          File(images[
+                                                              imagesIndex]),
+                                                          scale: 1 / 2,
                                                         )),
-                                                    if (images.isNotEmpty)
-                                                      CupertinoButton(
-                                                        padding:
-                                                            EdgeInsets.zero,
-                                                        onPressed: () {
-                                                          showCupertinoModalPopup<
-                                                              void>(
-                                                            context: context,
-                                                            builder: (BuildContext
-                                                                    context) =>
-                                                                CupertinoActionSheet(
-                                                              actions: <CupertinoActionSheetAction>[
-                                                                CupertinoActionSheetAction(
-                                                                  isDefaultAction:
-                                                                      true,
-                                                                  onPressed:
-                                                                      () {},
-                                                                  child: Image
-                                                                      .file(
-                                                                    File(images[
-                                                                        imagesIndex]),
-                                                                    scale:
-                                                                        1 / 2,
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          );
-                                                        },
-                                                        child: ClipRRect(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        20),
-                                                            child: Image.file(
-                                                              File(images[
-                                                                  imagesIndex]),
-                                                              scale: 1 / 2,
-                                                            )),
-                                                      ),
-                                                  ],
-                                                );
-                                              },
+                                                  ),
+                                              ],
                                             ),
                                           ),
                                         ),
