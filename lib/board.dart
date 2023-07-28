@@ -8,6 +8,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_glow/flutter_glow.dart';
 import 'package:flutter_map_animations/flutter_map_animations.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:simple_animation_progress_bar/simple_animation_progress_bar.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
@@ -179,7 +180,7 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
     count += 1;
     getTime(count);
     modelController.update(
-        rotationX: gyroX, rotationY: gyroY, rotationZ: gyroZ);
+        rotationX: 0, rotationY: heading!.toDouble(), rotationZ: 0);
   }
 
   void getTime(time) {
@@ -697,7 +698,15 @@ class _BoardState extends State<Board> with TickerProviderStateMixin {
                                           SizedBox(width: 3.5.w),
                                           CupertinoButton(
                                             padding: EdgeInsets.zero,
-                                            onPressed: () {},
+                                            onPressed: () async {
+                                              await controller
+                                                  .prepareForVideoRecording();
+                                              await controller
+                                                  .startVideoRecording()
+                                                  .onError((error, __) {
+                                                print(error);
+                                              });
+                                            },
                                             child: Container(
                                               decoration: BoxDecoration(
                                                   border: Border.all(
