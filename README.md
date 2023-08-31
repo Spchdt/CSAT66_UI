@@ -1,6 +1,6 @@
 # CSAT66_UI
 
-- Window Application for dispalying data from CSAT-66
+- Window Application for displaying data from CSAT66
 - Written in flutter
 - Connect to python script through websocket
 - Include these following status:
