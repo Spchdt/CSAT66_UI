@@ -1,4 +1,4 @@
-# CSAT-66_UI
+# CSAT66_UI
 
 - Window Application for dispalying data from CSAT-66
 - Written in flutter
