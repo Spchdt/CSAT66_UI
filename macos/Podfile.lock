@@ -1,4 +1,6 @@
 PODS:
+  - file_saver (0.0.1):
+    - FlutterMacOS
   - FlutterMacOS (1.0.0)
   - path_provider_foundation (0.0.1):
     - Flutter
@@ -7,11 +9,14 @@ PODS:
     - FlutterMacOS
 
 DEPENDENCIES:
+  - file_saver (from `Flutter/ephemeral/.symlinks/plugins/file_saver/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
   - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
   - simple_animation_progress_bar (from `Flutter/ephemeral/.symlinks/plugins/simple_animation_progress_bar/macos`)
 
 EXTERNAL SOURCES:
+  file_saver:
+    :path: Flutter/ephemeral/.symlinks/plugins/file_saver/macos
   FlutterMacOS:
     :path: Flutter/ephemeral
   path_provider_foundation:
@@ -20,6 +25,7 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/simple_animation_progress_bar/macos
 
 SPEC CHECKSUMS:
+  file_saver: 44e6fbf666677faf097302460e214e977fdd977b
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
   path_provider_foundation: 29f094ae23ebbca9d3d0cec13889cd9060c0e943
   simple_animation_progress_bar: d76494dba0304b6f0ca56d3657b54a0de7e3b6ed
